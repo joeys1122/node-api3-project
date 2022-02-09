@@ -55,17 +55,45 @@ router.put('/:id', validateUserId, validateUser, (req, res) => {
 router.delete('/:id', validateUserId, (req, res) => {
   // RETURN THE FRESHLY DELETED USER OBJECT
   // this needs a middleware to verify user id
+  Users.remove(req.params.id)
+    .then(isDeleted => {
+      if (isDeleted) {
+        res.status(200).json(req.user);
+      }
+    })
+    .catch(() => {
+      res.status(500).json({ message: 'error deleting user' });
+    })
 });
 
 router.get('/:id/posts', validateUserId, (req, res) => {
   // RETURN THE ARRAY OF USER POSTS
   // this needs a middleware to verify user id
+  Users.getUserPosts(req.params.id)
+    .then(posts => {
+      res.status(200).json(posts);
+    })
+    .catch(() => {
+      res.status(500).json({ message: 'error getting posts' });
+    })
 });
 
-router.post('/:id/posts', validateUserId, (req, res) => {
+router.post('/:id/posts', validateUserId, validatePost, (req, res) => {
   // RETURN THE NEWLY CREATED USER POST
   // this needs a middleware to verify user id
   // and another middleware to check that the request body is valid
+  const newPost = {
+    user_id: req.params.id,
+    text: req.body.text
+  }
+  Posts.insert(newPost)
+    .then(post => {
+      res.status(201).json(post);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ message: 'error posting' });
+    })
 });
 
 // do not forget to export the router
